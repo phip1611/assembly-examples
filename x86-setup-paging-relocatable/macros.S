@@ -173,6 +173,21 @@
     pop %eax
 .endm
 
+# CR0 bit Protection Enable
+.set CR0_PE, (1 << 0)
+# CR0 bit Write Protect
+.set CR0_WP, (1 << 16)
+# CR0 bit Paging
+.set CR0_PG, (1 << 31)
+
+.set CR0_BITS, (CR0_PE | /*CR0_WP |*/ CR0_PG)
+# TODO, investigate: I don't understand why the write_protect bit also fails if
+#  I read from the memory.
+# .set CR0_BITS, (CR0_PE | CR0_WP | CR0_PG)
+
+# CR4 bit Page Size Extension (PSE)
+.set CR4_PAE, (1 << 4)
+
 # Initializes paging with huge page support for the provided page directory.
 #
 # Input registers:
@@ -190,7 +205,7 @@
     # This is only required for 32-bit paging. 32-bit paging with PAE and 64-bit paging have
     # huge table support out of the box.
     mov     %cr4,           %eax
-    or      $0x10,          %eax    # set bit 4 (Page Size Extension (PSE))
+    or      $CR4_PAE,       %eax    # set bit 4 (Page Size Extension (PSE))
     mov     %eax,           %cr4
 
     # Set write protect (WP), paging (PG) and protection (PE) bits in cr0.
@@ -198,6 +213,6 @@
     # that the kernel can not write into read-only pages. We want the kernel to
     # fail in that case.
     mov     %cr0,           %eax
-    or      $0x80010001,    %eax
+    or      $CR0_BITS,      %eax
     mov     %eax,           %cr0
 .endm

@@ -48,6 +48,10 @@ fn_start_qemu() {
         "-debugcon"
         "stdio"
 
+        # Add this to debug page faults and other faults.
+        # "-d"
+        # "int,cpu_reset"
+
         # now reboot loop on broken code
         "-no-reboot"
     )

@@ -67,13 +67,12 @@ start:
 
     # test to read from memory
     M_RESOLVE_RUNTIME_ADDR mem_page_table_lvl2,     %eax
-    mov     (%eax),     %ecx
+    mov     (%eax),     %ecx    # read the first 4 byte from the page table into %ecx
 
     # Test that write protection of page table works:
-    # Write something to the page table that is not marked as present;
-    # if we comment this out, QEMU will stop as a page fault happens. To fix this,
-    # we can either disable the CR0.WP bit or change the permission from 0x81 to
-    # 0x83 to mark the page as writeable.
+    # We write something to the page table that is not marked as present;
+    # If we comment this out, QEMU will stop as a page fault happens. To fix this,
+    # we can change the permission from 0x81 to 0x83 to mark the page as writeable.
     # mov     $0x1230,    %ecx
     # mov     %ecx,       (%eax)
 
