@@ -27,38 +27,51 @@
     # flow continues..
 .endm
 
-# Calculates the offset between link address and load address during runtime and put it into the
-# provided register. This offset can be added to known link addresses of certain symbols to find
-# them during runtime.
+# Determine the relocation offset during runtime.
 #
-# Useful in 32-bit code. In 64-bit x86, an approach using the lea instruction should be used
-# instead.
+# Calculates the offset between link addresses and load addresses during
+# runtime and puts it into the provided register. This offset can be added to
+# known link addresses of certain symbols to find them during runtime after a
+# relocation.
+#
+# Useful in 32-bit code. In 64-bit x86, an approach using the lea instruction
+# should be used instead.
 #
 # Input Registers:
 #  - None
 # Parameters:
-#  - reg_tmp_addr: Register (distinct from the clobbered ones down below) with the begin address
-#    of a 4-byte long memory area that can be used as temporal storage. Must be valid and in physical
-#    ram. The original content will be restored after this code is done. Valid options depend on the
-#    platform. One valid option is to pass the pointer to the Multiboot Information Structure (MBI).
+#  - reg_tmp_addr: Register (distinct from the clobbered ones down below) with
+#    the begin address of a 4-byte long memory area that can be used as
+#    temporal storage. Must be valid and in physical ram. The original content
+#    will be restored after this code is done. Valid options depend on the
+#    platform. One valid option is to pass the pointer to the Multiboot
+#    Information Structure (MBI).
 #  - out_reg: Register where the output is stored.
 # Outputs:
 #  - The register behind the parameter 'out_reg' will contain the result.
-# Clobbers: %eax, %esp, out_reg
+# Clobbers: %eax, %edx, %esp, out_reg
 .macro M_CALC_LOAD_ADDR_OFFSET_32BIT reg_tmp_addr out_reg
         # prepare minimal stack for the next call
         mov     (\reg_tmp_addr),   %eax    # save original memory content
         mov     \reg_tmp_addr,     %esp
 
+        # The local label magic with "1b", "1f" etc. is documented here:
+        # https://sourceware.org/binutils/docs/as/Symbol-Names.html
+
+        # Relative call to local label "1". This puses %eip of the next
+        # instruction onto the stack.
         call    1f
-    1:  # After the call, the stack contains the old eip (which points to runtime address of local
-        # symbol 1:). We pop the eip from the stack intp register %edx.
+    1:  # After the call, the stack contains the old eip (which points to
+        # runtime address of local symbol "1"). We then pop the eip from the
+        # stack into register %edx.
         pop     %edx
-        # Substracting the link address of label "1" from the instruction pointer in %edx.
-        # %eax now contains the offset between link address and load address (=runtime address).
+
+        # We substract the link address of label "1" from the instruction
+        # pointer in %edx. %eax now contains the offset between link address
+        # and load address (=runtime address).
         sub     $1b,            \out_reg
 
-        # restore memory
+        # restore memory that was used as stack
         mov     %eax,           (\reg_tmp_addr)
 .endm
 
