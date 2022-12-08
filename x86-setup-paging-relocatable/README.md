@@ -6,3 +6,7 @@ More info can be found here: <https://phip1611.de/blog/cli-utility-to-calculate-
 
 I use a single 4 MiB huge page mapping for this. The kernel itself simulates a relocation of a
 bootloader and can cope with that. Please head to `main.S` for all the details.
+
+## Build and Run
+- `$ make`
+- `$ make run`
