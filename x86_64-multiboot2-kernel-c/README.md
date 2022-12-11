@@ -1,4 +1,4 @@
-# Setup 64-bit Paging from a Relocated Kernel
+# Setup 64-bit Paging from a Relocated Kernel (Kernel Code in C)
 
 This example is similar to the other example in the repository, but here, the kernel performs a
 transition from 32-bit mode without paging to 64-bit mode. There are no intermediate steps.
