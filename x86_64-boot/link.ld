@@ -29,11 +29,11 @@ PHDRS
 BOOT_LINK_ADDR = 0x800000; /* 8M */
 
 /* Hint for the boot loader where to load us. "PhysAddr" in readelf. */
-BOOT_LOAD_ADDR = 0x800000; /* TODO use relocation again; != 8M to simulate a relocation. */
+BOOT_LOAD_ADDR = BOOT_LINK_ADDR;
 
 /* Base link address for kernel code in high address space.
    Attention: This is duplicated in vars.S - keep in sync! */
-BASE_LINK_ADDR = 0xffffffff88000000;
+KERNEL_LINK_ADDR = 0xffffffff88000000;
 
 SECTIONS {
 
@@ -45,13 +45,16 @@ SECTIONS {
     .init_asm BOOT_LINK_ADDR : AT(BOOT_LOAD_ADDR) ALIGN(4K)
     {
         *(.init_asm)
+        *(.multiboot2_header)
+        *(.init_asm.mem)
     } : init_asm
 
+
     /* I ensure that the load address and the link address of the kernel section have the same
-       offset from BASE_LINK_ADDR. This allows to use 2 MiB huge page mappings where physical and
+       offset from KERNEL_LINK_ADDR. This allows to use 2 MiB huge page mappings where physical and
        virtual address needs a 2 MiB alignment. */
 
-    TEXT_LINK_ADDRESS = BASE_LINK_ADDR + ALIGN(SIZEOF(.init_asm), 2M);
+    TEXT_LINK_ADDRESS = KERNEL_LINK_ADDR + ALIGN(SIZEOF(.init_asm), 2M);
     TEXT_LOAD_ADDRESS = BOOT_LOAD_ADDR + ALIGN(SIZEOF(.init_asm), 2M);
 
     /* "ALIGN 4K": Ensure that the offset within the ELF file is page-aligned. This affects the

@@ -2,18 +2,18 @@
 
 .include "vars.S"
 
-# Verifies that there was a valid handoff from a Multiboot1 bootloader by checking the
+# Verifies that there was a valid handoff from a Multiboot2 bootloader by checking the
 # magic value in %eax.
 #
 # Input Registers:
-#  - %eax - the Multiboot magic number
+#  - %eax - the Multiboot2 magic number
 # Parameters:
 #  - None
 # Outputs:
 #  - None
 # Clobbers: rflags
 .macro M_ASSERT_MB_HANDOFF
-    cmp     $MULTIBOOT_MAGIC,  %eax
+    cmp     $MULTIBOOT2_MAGIC,  %eax
     # relative jump to following code (local label "0"), if the magic matches
     je      0f
     # otherwise, flow continues here:

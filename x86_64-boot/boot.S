@@ -5,10 +5,6 @@
 # by the Multiboot1 boot flow. My kernel then sets up 32-bit paging (regular, without PAE)
 # with a 4 MiB huge page mapping.
 
-# "ax": section flags. Relevant for the section flags in the object file.
-# Without those flags, the linker doesn't put this section into a LOAD segment as we expect.
-.section .init_asm, "ax", @progbits
-
 # Include helper macros.
 .include "vars.S"
 .include "macros.S"
@@ -27,14 +23,36 @@
 # %edx - Contains the load address offset to the link address. When we add this offset
 #        to known link addresses of symbols, we get the runtime physical address.
 #        This way, symbols can be found when the whole kernel binary was relocated.
-# %ebp - general purpose
-# %ecx - general purpose
+# others - general purpose
+# rsp/rbp - stack once 64-bit paging is active.
 
-# Multiboot v1 Header. Required so that we can be booted by QEMU via the "-kernel" parameter.
-__boot_header_mbi1:
-    .long   0x1badb002
-    .long   0x0
-    .long  -0x1badb002
+.section .multiboot2_header, "ax", @progbits
+
+/*
+ * Multiboot v2 Header
+ */
+__boot_header_mbi2_s:   .align 8 /* align to 8 byte for mbi2 */
+                        .long   0xe85250d6
+                        .long   0x0
+                        .long   (__boot_header_mbi2_e - __boot_header_mbi2_s)
+                        .long  -(0xe85250d6 + (__boot_header_mbi2_e - __boot_header_mbi2_s))
+                        /* relocatable tag */
+                        .word   0xa /* type = relocatable */
+                        .word   0x0 /* flags */
+                        .long   0x18 /* size */
+                        .long   0x200000 /* 2 MiB minimum load address. */
+                        .long   0xc0000000 /* 3 GiB maximum load address. */
+                        .long   0x200000 /* 2 MiB huge page alignment */
+                        .long   0 /* no preference*/
+                        /* end tag */
+                        .word   0x0 /* type */
+                        .word   0x0 /* flags */
+                        .long   0x8 /* size */
+__boot_header_mbi2_e:
+
+# "ax": section flags. Relevant for the section flags in the object file.
+# Without those flags, the linker doesn't put this section into a LOAD segment as we expect.
+.section .init_asm, "ax", @progbits
 
 # We are booted by Multiboot1. We end up in 32-bit protected mode (without paging by the way).
 # Thus, we produce 32-bit code. 64-bit code has other opcodes!
@@ -116,9 +134,14 @@ bit64_trampoline:
     mov %rax, %rbp
 
     # We jump at the link address of the high level kernel code. This works as
-    # I set up the page table properly.
-    jmp kernel_entry
+    # I set up the page table properly. I cannot use "jmp kernel_entry" as the jump
+    # will be relative, hence, the relocation is added.
+    mov $kernel_entry, %rax
+    jmp %rax
+
     ud2
+
+.align 4
 
 # Pointer for the ldgdt instruction which takes a 6-byte sequence
 # describing the size (2 byte) and the location (4 byte) of the GDT.

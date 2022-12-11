@@ -1,12 +1,12 @@
-# Multiboot v1 magic value
-.set MULTIBOOT_MAGIC, 0x2badb002
+# Multiboot v2 magic value
+.set MULTIBOOT2_MAGIC, 0x36d76289
 
 /* In order to let "GNU as" perform inline calculations with addresses, the symbol
  * must be in name space during compile time. Hence, I have to duplicate a few values
  * here that are also defined in "link.ld". */
 
 .set VAR_BOOT_LINK_ADDR, 0x800000
-.set VAR_BASE_LINK_ADDR, 0xffffffff88000000
+.set VAR_KERNEL_LINK_ADDR, 0xffffffff88000000
 
 /* Paging Constants */
 

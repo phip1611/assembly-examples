@@ -1,4 +1,4 @@
-.section .init_asm, "ax", @progbits
+.section .init_asm.mem, "ax", @progbits
 
 # Backing storage for the lvl 4 page table.
 .align 4096

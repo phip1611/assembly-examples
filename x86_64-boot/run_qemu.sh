@@ -8,9 +8,6 @@ DIR=$(dirname "$(realpath "$0")")
 cd "$DIR" || exit
 #########################################################################
 
-# The kernel binary to start.
-FINAL_ELF="kernel.elf32"
-
 fn_main() {
     fn_start_qemu
 }
@@ -28,8 +25,11 @@ fn_start_qemu() {
         "-monitor"
         "vc"
 
-        "-kernel"
-        "$FINAL_ELF"
+        "-boot"
+        "d"
+
+        "-cdrom"
+        "boot.img"
 
         # Use a standard VGA for graphics
         "-vga"
@@ -49,8 +49,8 @@ fn_start_qemu() {
         "stdio"
 
         # Add this to debug page faults and other faults.
-        # "-d"
-        # "int,cpu_reset"
+        "-d"
+        "int,cpu_reset"
 
         # now reboot loop on broken code
         "-no-reboot"
