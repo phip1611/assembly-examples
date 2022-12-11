@@ -180,10 +180,7 @@
 # CR0 bit Paging
 .set CR0_PG, (1 << 31)
 
-.set CR0_BITS, (CR0_PE | /*CR0_WP |*/ CR0_PG)
-# TODO, investigate: I don't understand why the write_protect bit also fails if
-#  I read from the memory.
-# .set CR0_BITS, (CR0_PE | CR0_WP | CR0_PG)
+.set CR0_BITS, (CR0_PE | CR0_WP | CR0_PG)
 
 # CR4 bit Page Size Extension (PSE)
 .set CR4_PAE, (1 << 4)
@@ -191,7 +188,7 @@
 # Initializes paging with huge page support for the provided page directory.
 #
 # Input registers:
-#  - None
+#  - %edx - Must contain the load offset.
 # Parameters:
 #  - page_directory: Symbol name of the backing memory for the page directory
 # Outputs:
