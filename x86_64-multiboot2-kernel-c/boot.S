@@ -63,7 +63,7 @@ start:
     M_ASSERT_MB_HANDOFF
 
     # Find offset of the relocation and store it in %edx.
-    M_CALC_LOAD_ADDR_OFFSET_32bit     %ebx,   %edx
+    M_CALC_LOAD_ADDR_OFFSET_32BIT     %ebx,   %edx
 
     # Update gdt pointer with relocation offset.
     M_RESOLVE_RUNTIME_ADDR gdt,     %eax
@@ -137,7 +137,7 @@ bit64_trampoline:
     # I set up the page table properly. I cannot use "jmp kernel_entry" as the jump
     # will be relative, hence, the relocation is added.
     mov $kernel_entry, %rax
-    jmp %rax
+    jmp *%rax
 
     ud2
 
