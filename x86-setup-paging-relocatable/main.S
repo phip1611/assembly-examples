@@ -42,7 +42,7 @@ start:
     M_ASSERT_MB_HANDOFF
 
     # Find offset of the relocation and store it in %edx.
-    M_CALC_LOAD_ADDR_OFFSET_32bit     %ebx,   %edx
+    M_CALC_LOAD_ADDR_OFFSET_32BIT     %ebx,   %edx
 
     # Setup stack. Stack grows downwards.
     M_RESOLVE_RUNTIME_ADDR mem_boot_stack_end, %eax

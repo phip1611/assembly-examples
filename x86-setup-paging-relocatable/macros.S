@@ -63,8 +63,8 @@
         call    1f
     1:  # After the call, the stack contains the old eip (which points to
         # runtime address of local symbol "1"). We then pop the eip from the
-        # stack into register %edx.
-        pop     %edx
+        # stack into the given register.
+        pop     \out_reg
 
         # We substract the link address of label "1" from the instruction
         # pointer in %edx. %eax now contains the offset between link address
