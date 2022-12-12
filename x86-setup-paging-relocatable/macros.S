@@ -1,100 +1,6 @@
 # Helper macros.
 
-.set MULTIBOOT_MAGIC, 0x2badb002
-
-# Verifies that there was a valid handoff from a Multiboot1 bootloader by checking the
-# magic value in %eax.
-#
-# Input Registers:
-#  - %eax - the Multiboot magic number
-# Parameters:
-#  - None
-# Outputs:
-#  - None
-# Clobbers: rflags
-.macro M_ASSERT_MB_HANDOFF
-    cmp     $MULTIBOOT_MAGIC,  %eax
-    # relative jump to following code, if the magic matches
-    je      0f
-    # otherwise, flow continues here
-
-    # signal error and hlt
-    mov     $0xbadb001, %ecx
-    mov     $0xbadb001, %edx
-    cli
-    hlt
-    0:
-    # flow continues..
-.endm
-
-# Determine the relocation offset during runtime.
-#
-# Calculates the offset between link addresses and load addresses during
-# runtime and puts it into the provided register. This offset can be added to
-# known link addresses of certain symbols to find them during runtime after a
-# relocation.
-#
-# Useful in 32-bit code. In 64-bit x86, an approach using the lea instruction
-# should be used instead.
-#
-# Input Registers:
-#  - None
-# Parameters:
-#  - reg_tmp_addr: Register (distinct from the clobbered ones down below) with
-#    the begin address of a 4-byte long memory area that can be used as
-#    temporal storage. Must be valid and in physical ram. The original content
-#    will be restored after this code is done. Valid options depend on the
-#    platform. One valid option is to pass the pointer to the Multiboot
-#    Information Structure (MBI).
-#  - out_reg: Register where the output is stored.
-# Outputs:
-#  - The register behind the parameter 'out_reg' will contain the result.
-# Clobbers: %eax, %edx, %esp, out_reg
-.macro M_CALC_LOAD_ADDR_OFFSET_32BIT reg_tmp_addr out_reg
-        # prepare minimal stack for the next call
-        mov     (\reg_tmp_addr),   %eax    # save original memory content
-        mov     \reg_tmp_addr,     %esp
-
-        # The local label magic with "1b", "1f" etc. is documented here:
-        # https://sourceware.org/binutils/docs/as/Symbol-Names.html
-
-        # Relative call to local label "1". This puses %eip of the next
-        # instruction onto the stack.
-        call    1f
-    1:  # After the call, the stack contains the old eip (which points to
-        # runtime address of local symbol "1"). We then pop the eip from the
-        # stack into the given register.
-        pop     \out_reg
-
-        # We substract the link address of label "1" from the instruction
-        # pointer in %edx. %eax now contains the offset between link address
-        # and load address (=runtime address).
-        sub     $1b,            \out_reg
-
-        # restore memory that was used as stack
-        mov     %eax,           (\reg_tmp_addr)
-.endm
-
-# Calculates the real load address from the link address of a known symbol and stores
-# it in the provided register. It relies on that the relocation offset was already set
-# in %edx.
-#
-# The function operates on 32 bit registers.
-#
-# Input Registers:
-#  - %edx - must contain the load offset
-# Parameters:
-#  - link_addr: Link address by its symbol name.
-#  - out_reg: Register where the output is stored.
-# Inputs:
-#  - None
-# Outputs:
-#  - The register behind the parameter 'out_reg' will contain the result.
-# Clobbers: out_reg
-.macro M_RESOLVE_RUNTIME_ADDR link_addr out_reg
-    mov     $\link_addr,    \out_reg
-    add     %edx,           \out_reg
-.endm
+.include "../common/macros.S"
 
 # Computes the page table offset where a page table entry needs to be written to. This
 # depends on the level of the page table and the given virtual address.s
@@ -140,16 +46,20 @@
     # calculate index into the phys_src_table
     M_CALC_PAGE_TABLE_ENTRY_INDEX    \level,  \vaddr_reg,    %ebp
 
-    # Create 32-bit page table entry in %eax.
-    mov     $\entry_flags,  %ecx
-    and     $0xfff,         %ecx   # ensure we only use the lowest 12 bits from the provided flags
-    M_RESOLVE_RUNTIME_ADDR  \phys_dest, %eax # put load address of page table into %eax
+    /* Create 32-bit page table entry in %eax. */
+
+    # ensure we only use the lowest 12 bits from the provided flags
+    mov     $(\entry_flags & 0xfff),  %ecx
+    M_RESOLVE_RUNTIME_ADDR  \phys_dest # put load address of page table into %eax
     add     %ecx,           %eax   # add flags to entry
 
+    # save entry in %ecx
+    mov     %eax,   %ecx
+
     # Write the entry to the table
-    M_RESOLVE_RUNTIME_ADDR  \phys_src_table,    %ecx    # dest phys address in %ecx
-    add     %ebp,           %ecx   # add index to table => %ecx is now pointer to table entry
-    mov     %eax,           (%ecx) # write entry to the correct index of the table
+    M_RESOLVE_RUNTIME_ADDR  \phys_src_table    # dest phys address in %ecx
+    add     %ebp,           %eax   # add index to table => %eax is now pointer to table entry
+    mov     %ecx,           (%eax) # write entry to the correct index of the table
 .endm
 
 # Wrapper around debugcon_print_string_until_null_32bit that prints a null-terminated string
@@ -166,7 +76,7 @@
     push %eax
     push %ecx
     push %edx
-    M_RESOLVE_RUNTIME_ADDR  \string,    %eax
+    M_RESOLVE_RUNTIME_ADDR  \string
     call debugcon_print_string_until_null
     pop %edx
     pop %ecx
@@ -195,7 +105,7 @@
 #   - None.
 # Clobbers: %eax, %cr0, %cr3, %cr4
 .macro M_INIT_PAGING page_directory
-    M_RESOLVE_RUNTIME_ADDR \page_directory,   %eax
+    M_RESOLVE_RUNTIME_ADDR \page_directory
     mov     %eax,           %cr3
 
     # Enable huge page support for 32-bit paging.

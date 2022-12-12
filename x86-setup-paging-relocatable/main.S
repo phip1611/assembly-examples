@@ -38,25 +38,33 @@ __boot_header_mbi1:
 .code32
 .global start
 start:
-    # call macro from macros.S
-    M_ASSERT_MB_HANDOFF
+    # The code uses several macros from "macros.S". Please check them out first!
 
-    # Find offset of the relocation and store it in %edx.
-    M_CALC_LOAD_ADDR_OFFSET_32BIT     %ebx,   %edx
+    M_ASSERT_MB1_HANDOFF
 
-    # Setup stack. Stack grows downwards.
-    M_RESOLVE_RUNTIME_ADDR mem_boot_stack_end, %eax
+    /*  Find offset of the relocation and store it in %edx. */
+
+    M_CALC_RELOCATION_OFFSET_32BIT_WRAPPER     %ebx
+
+    /* Setup stack a stack which allows us to use the M_DEBUGCON_PRINT macro. */
+    M_RESOLVE_RUNTIME_ADDR mem_boot_stack_end # stack grows downwards.
     mov     %eax,           %esp
 
     M_DEBUGCON_PRINT str_hello_world
 
-    # Now, I want to make the switch from 32-bit protected mode without paging to paging enabled.
-    # I need one single lvl 2 page table with a 4 MiB huge page mapping.
+    /*
+     * Now, we switch from 32-bit protected mode without paging to
+     * 32-bit protected mode with paging. We enable huge page support but
+     * do not use PAE.
+     *
+     * I create a single 4 MiB huge page mapping in the lvl2 page table.
+     */
 
     /* BEGIN: IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
-        M_RESOLVE_RUNTIME_ADDR LINK_ADDR,   %ebp
-        # entry bits: present, writeable, implicitly executable, 4 MiB huge page
-        # writeable required as the stack
+        M_RESOLVE_RUNTIME_ADDR LINK_ADDR
+        mov %eax,   %ebp # save value in %ebp
+        # entry flags: present, writeable, implicitly executable, huge page
+        # writeable is required as the stack lies in this region.
         M_PAGE_TABLE_WRITE_ENTRY 2, %ebp, mem_page_table_lvl2, LINK_ADDR, 0x83
         M_INIT_PAGING mem_page_table_lvl2
     /* END:   IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
