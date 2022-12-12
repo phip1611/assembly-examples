@@ -23,43 +23,28 @@
     imul    $4,             \out_reg # index * 4 as each entry is 4 byte long with 32-bit paging
 .endm
 
-# Writes a page table entry.
+# Creates a mapping for a virtual address in the page table for the given level.
 #
-# Input registers:
-#  - None
 # Parameters:
 #  - level: 1 or 2
 #  - vaddr_reg: Register that contains the virtual address used for the mapping.
 #  - phys_src_table: Symbol name of backing storage for source table (the one that needs an entry).
 #  - phys_dest: Symbol name of physical memory to point to. Next table or (super) page.
 #  - entry_flags: page table entry flags (huge page, permission bits, ...) (bits 11..0)
-# Outputs:
-#   - None.
 # Clobbers: %eax, %ebp, %ecx
-.macro M_PAGE_TABLE_WRITE_ENTRY level, vaddr_reg, phys_src_table, phys_dest, entry_flags
-    # When this code is done, the following applies:
-    # %ebp => byte offset into the page table for the entry (index * sizeof(entry))
-    # %eax => page table entry that needs to be written into %ecx
-    # %ecx => pointer to the entry of the page table where the entry is written to;
-    #         already contains the index from %ebp
-
+.macro M_CREATE_VADDR_PAGE_TABLE_MAPPING level, vaddr_reg, phys_src_table, phys_dest, entry_flags
     # calculate index into the phys_src_table
     M_CALC_PAGE_TABLE_ENTRY_INDEX    \level,  \vaddr_reg,    %ebp
 
     /* Create 32-bit page table entry in %eax. */
-
-    # ensure we only use the lowest 12 bits from the provided flags
-    mov     $(\entry_flags & 0xfff),  %ecx
-    M_RESOLVE_RUNTIME_ADDR  \phys_dest # put load address of page table into %eax
-    add     %ecx,           %eax   # add flags to entry
-
+    M_CREATE_PAGE_TABLE_ENTRY  %eax,    \entry_flags
     # save entry in %ecx
     mov     %eax,   %ecx
 
-    # Write the entry to the table
-    M_RESOLVE_RUNTIME_ADDR  \phys_src_table    # dest phys address in %ecx
-    add     %ebp,           %eax   # add index to table => %eax is now pointer to table entry
-    mov     %ecx,           (%eax) # write entry to the correct index of the table
+    /* Write 32-bit page table entry. */
+    M_RESOLVE_RUNTIME_ADDR  \phys_src_table
+    # write %ecx to table behind %eax at offset %ebp
+    M_WRITE_PAGE_TABLE_ENTRY %ecx, %eax, %ebp
 .endm
 
 # Wrapper around debugcon_print_string_until_null_32bit that prints a null-terminated string

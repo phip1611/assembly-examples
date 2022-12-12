@@ -65,7 +65,7 @@ start:
         mov %eax,   %ebp # save value in %ebp
         # entry flags: present, writeable, implicitly executable, huge page
         # writeable is required as the stack lies in this region.
-        M_PAGE_TABLE_WRITE_ENTRY 2, %ebp, mem_page_table_lvl2, LINK_ADDR, 0x83
+        M_CREATE_VADDR_PAGE_TABLE_MAPPING 2, %ebp, mem_page_table_lvl2, LINK_ADDR, 0x83
         M_INIT_PAGING mem_page_table_lvl2
     /* END:   IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
 

@@ -118,3 +118,42 @@
     mov     $\link_addr,    %eax
     add     %edx,           %eax    # add relocation offset
 .endm
+
+/*
+ * Creates a page table entry in %eax that points to a 32-bit physical address
+ * with the given page table entry flags. The macro ensures that the physical
+ * address is page aligned.
+ *
+ * For 64-bit paging with 64 bits per entry, this only covers the lowest 32
+ * bits. Hence, the NX bits can't be set with this macro.
+ *
+ * Parameters:
+ * - link_addr: Link address either as symbol name or as numeric value.
+ * Clobbers: %eax, flags
+ */
+.macro M_CREATE_PAGE_TABLE_ENTRY reg_phys_addr, entry_flags
+    mov \reg_phys_addr, %eax
+    /* Check if the address is page-aligned/the lowest 12 bits are zero. */
+    test $0xfff,        %eax # sets the zero flag to true, if the result is zero
+    jz 0f  # jump to label 0 if the test was not successfull
+    /* Panic. Unrecoverable error, something went really wrong. */
+    ud2 # ud2 throws an exception; easily catchable in QEMU
+    0:
+    or $(\entry_flags & 0xfff), %eax # add flags to entry
+.endm
+
+/*
+ * Writes a 32-bit page table entry into the corresponding page table. If 64 bit
+ * paging with 64 bits per entry is used, this macro writes the lower half of
+ * the entry.
+ *
+ * Parameters:
+ * - reg_entry: Register that contains the page table entry
+ * - reg_phys_table: Register that contains the physical address of the table
+ * - reg_offset: Register that contains the offset into the page table
+ * Clobbers: reg_entry, reg_phys_table, reg_offset, flags
+ */
+.macro M_WRITE_PAGE_TABLE_ENTRY reg_entry, reg_phys_table, reg_offset
+    add \reg_offset,    \reg_phys_table   # add offset => pointer to entry
+    mov \reg_entry,     (\reg_phys_table) # write entry to pointer
+.endm
