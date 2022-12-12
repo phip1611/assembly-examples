@@ -1,0 +1,5 @@
+kernel
+kernel.elf32
+*.o
+boot.img
+grub

@@ -55,26 +55,18 @@ start:
 
     /* BEGIN: IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
         M_RESOLVE_RUNTIME_ADDR LINK_ADDR,   %ebp
-        # entry bits: present, read only, implicitly executable, 4 MiB huge page
-        M_PAGE_TABLE_WRITE_ENTRY 2, %ebp, mem_page_table_lvl2, LINK_ADDR, 0x81
+        # entry bits: present, writeable, implicitly executable, 4 MiB huge page
+        # writeable required as the stack
+        M_PAGE_TABLE_WRITE_ENTRY 2, %ebp, mem_page_table_lvl2, LINK_ADDR, 0x83
         M_INIT_PAGING mem_page_table_lvl2
     /* END:   IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
 
     # If there is no page fault (which will cause a triple fault very likely) at this point
     # here, then the page table setup was successful!
 
+    # Pushes to the stack which is a write to the memory. Hence, the page table
+    # mapping must be writeable.
     M_DEBUGCON_PRINT str_paging_init
-
-    # test to read from memory
-    M_RESOLVE_RUNTIME_ADDR mem_page_table_lvl2,     %eax
-    mov     (%eax),     %ecx    # read the first 4 byte from the page table into %ecx
-
-    # Test that write protection of page table works:
-    # We write something to the page table that is not marked as present;
-    # If we comment this out, QEMU will stop as a page fault happens. To fix this,
-    # we can change the permission from 0x81 to 0x83 to mark the page as writeable.
-    # mov     $0x1230,    %ecx
-    # mov     %ecx,       (%eax)
 
     cli
     hlt
