@@ -21,9 +21,9 @@ PHDRS
    be available in the assembly source, for example. */
 
 /* Link address of code. For example, relevant for absolute addressing. */
-LINK_ADDR = 8M;
+BOOT_LINK_ADDR = 8M;
 /* Hint for the boot loader where to load us. "PhysAddr" in readelf. */
-LOAD_ADDR = 4M;
+BOOT_LOAD_ADDR = 4M;
 
 SECTIONS {
 
@@ -32,7 +32,7 @@ SECTIONS {
      * by a bootloader. For more info about the syntax, see
      * https://sourceware.org/binutils/docs/ld/Output-Section-Attributes.html
      */
-    .init_asm LINK_ADDR : AT(LOAD_ADDR) ALIGN(4K)
+    .init_asm BOOT_LINK_ADDR : AT(BOOT_LOAD_ADDR) ALIGN(4K)
     {
         *(.init_asm)
     } : init_asm

@@ -47,7 +47,7 @@ start:
     M_CALC_RELOCATION_OFFSET_32BIT_WRAPPER     %ebx
 
     /* Setup stack a stack which allows us to use the M_DEBUGCON_PRINT macro. */
-    M_RESOLVE_RUNTIME_ADDR mem_boot_stack_end # stack grows downwards.
+    M_RESOLVE_RUNTIME_ADDR mem_boot_stack_end # stack grows downwards
     mov     %eax,           %esp
 
     M_DEBUGCON_PRINT str_hello_world
@@ -60,17 +60,16 @@ start:
      * I create a single 4 MiB huge page mapping in the lvl2 page table.
      */
 
-    /* BEGIN: IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
-        M_RESOLVE_RUNTIME_ADDR LINK_ADDR
-        mov %eax,   %ebp # save value in %ebp
-        # entry flags: present, writeable, implicitly executable, huge page
-        # writeable is required as the stack lies in this region.
-        M_CREATE_VADDR_PAGE_TABLE_MAPPING 2, %ebp, mem_page_table_lvl2, LINK_ADDR, 0x83
-        M_INIT_PAGING mem_page_table_lvl2
-    /* END:   IDENTITY MAP FOR BOOT_LINK_ADDR (WITH RESPECT TO RELOCATION) */
+    /* Identity page mapping for BOOT_LINK_ADDR (with respect to relocation). */
 
-    # If there is no page fault (which will cause a triple fault very likely) at this point
-    # here, then the page table setup was successful!
+    # entry flags: present, writeable, implicitly executable, huge page
+    # writeable is required as the stack lies in this region.
+    M_CREATE_VADDR_PAGE_TABLE_MAPPING 2, BOOT_LINK_ADDR, "true", mem_page_table_lvl2, BOOT_LINK_ADDR, 0x83
+
+    M_INIT_PAGING mem_page_table_lvl2
+
+    # If there is no page fault (which will cause a triple fault very likely) at
+    # this point here, then the page table setup was successful!
 
     # Pushes to the stack which is a write to the memory. Hence, the page table
     # mapping must be writeable.

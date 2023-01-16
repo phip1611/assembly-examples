@@ -61,13 +61,13 @@
 .macro M_CALC_RELOCATION_OFFSET_32BIT
     /*
      * Relative call to local label "1". This pushes the instruction pointer
-     * (ip) of the next instruction onto the stack.
+     * (IP) of the next instruction onto the stack.
      */
     call    1f  # 1f: forward search for label "1"
 
     /*
      * After the call, the stack now contains return address, i.e., the runtime
-     * address of the next instruction. Then, the ip is popped from the into
+     * address of the next instruction. Then, the IP is popped from the into
      * the register.
      */
 
@@ -75,8 +75,8 @@
     pop     %edx
 
     /*
-     * We subtract the link address of label "1" from the actual ip. This
-     * register now contains the offset between link address and load address
+     * We subtract the link address of label "1" from the actual IP. Register
+     * %edx now contains the offset between link address and load address
      * (=runtime address).
      */
 
@@ -128,7 +128,8 @@
  * bits. Hence, the NX bits can't be set with this macro.
  *
  * Parameters:
- * - link_addr: Link address either as symbol name or as numeric value.
+ * - reg_phys_addr:
+ * - entry_flags:
  * Clobbers: %eax, flags
  */
 .macro M_CREATE_PAGE_TABLE_ENTRY reg_phys_addr, entry_flags
@@ -136,8 +137,13 @@
     /* Check if the address is page-aligned/the lowest 12 bits are zero. */
     test $0xfff,        %eax # sets the zero flag to true, if the result is zero
     jz 0f  # jump to label 0 if the test was not successfull
+
     /* Panic. Unrecoverable error, something went really wrong. */
+
     ud2 # ud2 throws an exception; easily catchable in QEMU
+    mov $0xbadb002, %eax
+    ud2
+
     0:
     or $(\entry_flags & 0xfff), %eax # add flags to entry
 .endm
