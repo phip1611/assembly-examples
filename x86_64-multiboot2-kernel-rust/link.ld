@@ -14,7 +14,7 @@ PHDRS
                          64-bit ELFs. Also called "Segment Permissions" in ELF specification or
                          "p_flags". Helps loaders of ELF files to set the right page table bits. */
 
-    init_asm     PT_LOAD FLAGS(7); /* 0b101 - read + execute */
+    init_asm     PT_LOAD FLAGS(7); /* 0b111 - read + write + execute */
 
     kernel_rx    PT_LOAD FLAGS(5); /* 0b101 - read + execute */
     kernel_ro    PT_LOAD FLAGS(4); /* 0b100 - read  */
@@ -109,6 +109,7 @@ SECTIONS {
     _bss_size = _bss_end - _bss_begin;
 
     /* Round up division. */
+    /* Todo create dynamic amount of huge page mappings. */
     _text_2mib_pages = (_text_size + (2M - 1)) / 2M;
     _rodata_2mib_pages = (_rodata_size + (2M - 1)) / 2M;
     _data_2mib_pages = (_data_size + (2M - 1)) / 2M;

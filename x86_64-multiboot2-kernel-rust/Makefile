@@ -2,8 +2,6 @@ default: kernel
 
 .PHONY: clean default kernel run
 
-CFLAGS=-ffreestanding -nostdlib
-
 export RUSTFLAGS=-C code-model=kernel -C link-arg=-Tlink.ld -C relocation-model=static
 
 
