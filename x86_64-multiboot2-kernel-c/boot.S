@@ -129,7 +129,7 @@ start:
 bit64_trampoline:
 
     mov $hi_stack_end, %rax
-    sub $(64 - 8),    %rax # weird x86 stack alignment. 8 byte alignment 1 byte above %rsp
+    sub $(64 - 8),    %rax # weird x86 stack alignment. 64-byte alignment 8 byte above %rsp
     mov %rax, %rsp
     mov %rax, %rbp
 
