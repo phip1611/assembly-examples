@@ -2,6 +2,16 @@
 # target is a compiler built-in
 target = "x86_64-unknown-none"
 
-# Ineffective, as we pass RUSTFLAGS as environment variable
-# in the Makefile. This has a higher precedence.
-# rustflags = []
+rustflags = [
+    # code-model=kernel most-probably ineffective, as we set the right
+    # link addresses in the linker script.
+    "-C",
+    "code-model=kernel",
+    "-C",
+    "link-arg=-Tlink.ld",
+    # It's fine if the kernel is not relocatable in virtual address space.
+    # Instead, we set up corresponding page tables in the initial boot code
+    # and jump to the static link address of the Rust code.
+    "-C",
+    "relocation-model=static",
+]

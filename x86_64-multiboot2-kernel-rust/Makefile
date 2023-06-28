@@ -2,9 +2,6 @@ default: kernel
 
 .PHONY: clean default kernel run
 
-export RUSTFLAGS=-C code-model=kernel -C link-arg=-Tlink.ld -C relocation-model=static
-
-
 kernel:
 	cargo build --release
 
