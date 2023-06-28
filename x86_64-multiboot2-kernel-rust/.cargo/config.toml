@@ -2,6 +2,7 @@
 # target is a compiler built-in
 target = "x86_64-unknown-none"
 
+[target."x86_64-unknown-none"]
 rustflags = [
     # code-model=kernel most-probably ineffective, as we set the right
     # link addresses in the linker script.
