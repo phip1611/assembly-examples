@@ -61,17 +61,17 @@ start:
 
     # Update gdt pointer with relocation offset.
     M_RESOLVE_RUNTIME_ADDR gdt,     %eax
-    M_RESOLVE_RUNTIME_ADDR gdt_ptr, %ebx
-    mov     %eax,   (%ebx)
+    M_RESOLVE_RUNTIME_ADDR gdt_ptr, %ecx
+    mov     %eax,   (%ecx)
 
     # We need to load a gdt with a 64-bit code segment to jump into 64-bit mode.
     M_RESOLVE_RUNTIME_ADDR ldt_gdt_data, %eax
     lgdt    (%eax)
 
     # Update position of 64-bit trampoline with relocation offset.
-    M_RESOLVE_RUNTIME_ADDR bit64_trampoline, %ebx
+    M_RESOLVE_RUNTIME_ADDR bit64_trampoline, %ecx
     M_RESOLVE_RUNTIME_ADDR .L_ljmp_dest, %eax
-    mov %ebx, (%eax)
+    mov %ecx, (%eax)
 
 
     /* BEGIN: Setup Identity Page Table Mapping for Boot Code
