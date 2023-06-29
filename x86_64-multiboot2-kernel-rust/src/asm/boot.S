@@ -82,6 +82,12 @@ start:
     M_PAGE_TABLE_WRITE_ENTRY VAR_BOOT_LINK_ADDR, 3, mem_pt_lvl3l, mem_pt_lvl2l, 0x1, ADD_OFFSET
     M_PAGE_TABLE_WRITE_ENTRY VAR_BOOT_LINK_ADDR, 2, mem_pt_lvl2l, VAR_BOOT_LINK_ADDR, 0x81, ADD_OFFSET
 
+    /* Very ugly, quick and dirty: Map the first 2MiB as identity mapping. GRUB always puts the
+       MBI here. */
+    M_PAGE_TABLE_WRITE_ENTRY 0x0, 4, mem_pt_lvl4, mem_pt_lvl3l, 0x1
+    M_PAGE_TABLE_WRITE_ENTRY 0x0, 3, mem_pt_lvl3l, mem_pt_lvl2l, 0x1
+    M_PAGE_TABLE_WRITE_ENTRY 0x0, 2, mem_pt_lvl2l, 0x0, 0x81
+
     /*   END: Setup Identity Page Table Mapping for Boot Code */
 
     /* BEGIN: Setup Page Table Mappings for all non-boot code LOAD segments. */
@@ -131,6 +137,9 @@ bit64_trampoline:
     xor %rdi,   %rdi
     mov %edx,   %edi
     add $VAR_BOOT_LINK_ADDR, %edi
+
+    xor %rsi,   %rsi
+    mov %ebx,   %esi
 
     # We jump at the link address of the high level kernel code. This works as
     # I set up the page table properly. I cannot use "jmp kernel_entry" as the jump

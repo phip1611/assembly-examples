@@ -3,18 +3,23 @@
 //   2) we write Kernel code, but standard lib makes syscalls and is meant for userland programs
 #![no_std]
 #![no_main]
+
+#![feature(const_mut_refs)]
+
 #![deny(missing_debug_implementations)]
 
 use crate::debugcon::Printer;
 use core::fmt::Write;
 use core::panic::PanicInfo;
+use multiboot2::BootInformation;
 
 mod asm;
+mod global_alloc;
 
 const EXPECTED_LOAD_ADDR: u64 = 0x800000;
 
 #[no_mangle]
-extern "C" fn kernel_entry(load_addr: u64) -> ! {
+extern "C" fn kernel_entry(load_addr: u64, multiboot2_info: u64) -> ! {
     writeln!(Printer, "Hello World from Rust Kernel").unwrap();
     writeln!(
         Printer,
@@ -25,6 +30,24 @@ extern "C" fn kernel_entry(load_addr: u64) -> ! {
         load_addr / 1024 / 1024
     )
     .unwrap();
+    writeln!(
+        Printer,
+        "Multiboot2 boot info @ {:#x}",
+        multiboot2_info as u32
+    )
+    .unwrap();
+
+    let mbi = multiboot2_info as *const u64 as *const multiboot2::BootInformationHeader;
+    let mbi = unsafe { BootInformation::load(mbi) }.unwrap();
+
+
+    writeln!(
+        Printer,
+        "Multiboot2 boot info: {:?}",
+        mbi
+    )
+        .unwrap();
+
     loop {}
 }
 

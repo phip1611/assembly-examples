@@ -42,7 +42,7 @@ fn_start_qemu() {
 
         # Allocate some memory
         "-m"
-        "16M"
+        "32M"
 
         # https://phip1611.de/blog/how-to-use-qemus-debugcon-feature-and-write-to-a-file/
         "-debugcon"
