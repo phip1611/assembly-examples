@@ -209,17 +209,23 @@
 #  - page_directory: Symbol name of the backing memory for the page directory
 # Outputs:
 #   - None.
-# Clobbers: %eax, %cr0, %cr3, %cr4
+# Clobbers: %eax, %ebp, %cr0, %cr3, %cr4
 .macro M_INIT_PAGING page_directory
 
     # Set top level page table.
     M_RESOLVE_RUNTIME_ADDR \page_directory,   %eax
     mov     %eax,           %cr3
 
+    # Save relocation offset.
+    mov     %edx,   %ebp
 
     mov     $MSR_IA32_EFER_REG,    %ecx
-    # reads the lower 32-bits value of MSR in %ecx into %eax
+    # reads the lower 32-bits of MSR behind %ecx into %eax. The higher
+    # 32-bits are read into %edx.
     rdmsr
+
+    # Restore relocation offset.
+    mov     %ebp,   %edx
 
     # enable 64-bit long mode
     or      $MSR_IA32_EFER_BITS,    %eax
@@ -236,7 +242,7 @@
     or      $CR0_BITS,      %eax
     mov     %eax,           %cr0
 
-    # Now, we are in 64-bit compatiblilty mode* with 4-level paging.
+    # Now, we are in 64-bit compatibility mode* with 4-level paging.
     # We need a far jump/long jump into 64-bit mode next.
 .endm
 

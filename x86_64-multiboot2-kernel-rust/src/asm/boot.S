@@ -37,7 +37,7 @@ __boot_header_mbi2_s:   .align 8 /* align to 8 byte for mbi2 */
                         .long   0x200000 /* 2 MiB minimum load address. */
                         .long   0xc0000000 /* 3 GiB maximum load address. */
                         .long   0x200000 /* 2 MiB huge page alignment */
-                        .long   0 /* no preference*/
+                        .long   2 /* prefer high - just for the purpose of the demo. */
                         /* end tag */
                         .word   0x0 /* type */
                         .word   0x0 /* flags */
@@ -126,6 +126,11 @@ bit64_trampoline:
     sub $(64 - 8),    %rax # weird x86 stack alignment. 64-byte alignment 8 byte above %rsp
     mov %rax, %rsp
     mov %rax, %rbp
+
+    # Prepare function arguments
+    xor %rdi,   %rdi
+    mov %edx,   %edi
+    add $VAR_BOOT_LINK_ADDR, %edi
 
     # We jump at the link address of the high level kernel code. This works as
     # I set up the page table properly. I cannot use "jmp kernel_entry" as the jump
