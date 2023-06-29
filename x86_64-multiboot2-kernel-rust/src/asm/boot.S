@@ -84,8 +84,8 @@ start:
 
     /* Very ugly, quick and dirty: Map the first 2MiB as identity mapping. GRUB always puts the
        MBI here. */
-    M_PAGE_TABLE_WRITE_ENTRY 0x0, 4, mem_pt_lvl4, mem_pt_lvl3l, 0x1
-    M_PAGE_TABLE_WRITE_ENTRY 0x0, 3, mem_pt_lvl3l, mem_pt_lvl2l, 0x1
+    M_PAGE_TABLE_WRITE_ENTRY 0x0, 4, mem_pt_lvl4, mem_pt_lvl3l, 0x1, ADD_OFFSET
+    M_PAGE_TABLE_WRITE_ENTRY 0x0, 3, mem_pt_lvl3l, mem_pt_lvl2l, 0x1, ADD_OFFSET
     M_PAGE_TABLE_WRITE_ENTRY 0x0, 2, mem_pt_lvl2l, 0x0, 0x81
 
     /*   END: Setup Identity Page Table Mapping for Boot Code */
