@@ -1,8 +1,6 @@
-# With this file, another toolchain to the currently selected one will be used, when you execute `cargo build`.
 # https://rust-lang.github.io/rustup/overrides.html
 
 [toolchain]
-# Rust nightly 1.72
-channel = "nightly-2023-06-28"
+channel = "1.70.0"
 components = [ "rust-src", "rust-std", "rustc", "cargo", "clippy", "rustfmt" ]
 targets = [ "x86_64-unknown-none" ]
