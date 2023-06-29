@@ -3,18 +3,28 @@
 //   2) we write Kernel code, but standard lib makes syscalls and is meant for userland programs
 #![no_std]
 #![no_main]
-
 #![deny(missing_debug_implementations)]
 
-use core::panic::PanicInfo;
 use crate::debugcon::Printer;
 use core::fmt::Write;
+use core::panic::PanicInfo;
 
 mod asm;
 
+const EXPECTED_LOAD_ADDR: u64 = 0x800000;
+
 #[no_mangle]
-fn kernel_entry() -> ! {
-    write!(Printer, "Hello World from Rust Kernel").unwrap();
+extern "C" fn kernel_entry(load_addr: u64) -> ! {
+    writeln!(Printer, "Hello World from Rust Kernel").unwrap();
+    writeln!(
+        Printer,
+        "Expected Load Addr = {:#x} ({}M); Actual Load Addr = {:#x} ({}M)",
+        EXPECTED_LOAD_ADDR,
+        EXPECTED_LOAD_ADDR / 1024 / 1024,
+        load_addr,
+        load_addr / 1024 / 1024
+    )
+    .unwrap();
     loop {}
 }
 
@@ -41,8 +51,6 @@ mod debugcon {
     }
 
     fn print_char(c: u8) {
-        unsafe {
-            x86::io::outb(QEMU_DEBUGCON_PORT, c)
-        }
+        unsafe { x86::io::outb(QEMU_DEBUGCON_PORT, c) }
     }
 }
